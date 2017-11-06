@@ -19,7 +19,7 @@ import functools
 
 def createUI(pWindowTitle, pApplyCallback, pRestoreCallback):
 
-    windowID = 'MyWindowID' #svaki prozor ima unique identifier da bi samo jedan bio otvoren at a time
+    windowID = 'MyWindowID' # each window has a unique identifier so that only one would be opened at a time
     if cmds.window(windowID, exists=True):
         cmds.deleteUI(windowID)
 
@@ -27,7 +27,6 @@ def createUI(pWindowTitle, pApplyCallback, pRestoreCallback):
     cmds.window(windowID, title=pWindowTitle, sizeable=True, resizeToFitChildren=True)
 
     cmds.columnLayout(adjustableColumn=True)
-    
     
 
     cmds.separator( h=10, style='none' )
@@ -92,7 +91,7 @@ def createUI(pWindowTitle, pApplyCallback, pRestoreCallback):
 
 
 def translater(sel, procenat, chekBoxes):
-    # Translate selekcije
+    # Translate selection
 
     for item in sel:
         myTransX = item + '.translateX'
@@ -104,7 +103,6 @@ def translater(sel, procenat, chekBoxes):
         oldTransY = cmds.getAttr(myTransY)
         oldTransZ = cmds.getAttr(item+'.translateZ')
         
-        #print 'Old transform is:', oldTransX, oldTransY, oldTransZ
 
         transX = oldTransX + random.uniform(-procenat, procenat)
         transY = oldTransY + random.uniform(-procenat, procenat)
@@ -120,7 +118,7 @@ def translater(sel, procenat, chekBoxes):
 
 
 def rotor(sel, procenat, chekBoxes):
-    # Rotacija selekcije
+    # rotate selection
   
     razmera = (360.0*procenat)/100
 
@@ -144,7 +142,7 @@ def rotor(sel, procenat, chekBoxes):
 
 
 def scaler(sel, procenat, chekBoxes):
-     # Scale selekcije
+     # Scale selection
    
      for item in sel:
         myScaleX = item + '.scaleX'
@@ -154,7 +152,6 @@ def scaler(sel, procenat, chekBoxes):
         oldScaleX = cmds.getAttr(myScaleX)
         oldScaleY = cmds.getAttr(myScaleY)
         oldScaleZ = cmds.getAttr(myScaleZ)
-        #print 'Old scale is:', oldScaleX, oldScaleY, oldScaleZ
 
         scaleX = oldScaleX + random.uniform(-procenat, procenat)
         scaleY = oldScaleX + random.uniform(-procenat, procenat)
@@ -170,6 +167,7 @@ def scaler(sel, procenat, chekBoxes):
 
 def find_poly_obj(sel):
     # Finds only poly objects in a selection
+    
     poly_obj = []
   
     for item in sel:
