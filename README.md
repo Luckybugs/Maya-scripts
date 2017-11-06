@@ -1,2 +1,2 @@
-# Randomizer-for-maya
+# Randomizer for maya
 ![](screenshot2.png)
