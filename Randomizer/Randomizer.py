@@ -29,8 +29,7 @@ def createUI(pWindowTitle, pApplyCallback, pRestoreCallback):
     cmds.columnLayout(adjustableColumn=True)
     
     
-    cmds.separator( h=10, style='none' )
-    cmds.text('nameHere', label='Olgic lovi misa, pomeri slajdere da joj pomognes!')
+
     cmds.separator( h=10, style='none' )
     
     
@@ -76,7 +75,7 @@ def createUI(pWindowTitle, pApplyCallback, pRestoreCallback):
 
     # Buttons 
  
-    cmds.button(label="Randomise", width=240, command=functools.partial(pApplyCallback,
+    cmds.button(label="Randomize", width=240, command=functools.partial(pApplyCallback,
                                                                 moveInputField,
                                                                 mcbx,mcby,mcbz,
                                                                 rotateInputField,
@@ -274,9 +273,6 @@ def restoreCallback(pBeforeData, *pArgs):
 
     # restoring those we have moved
     restore_to_original_position(sel, pBeforeData)
-
-
-
 
 
 
