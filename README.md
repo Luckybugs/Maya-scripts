@@ -1,2 +1,2 @@
 # Maya-scripts
-![](screenshot.png)
+![](screenshot2.png)
