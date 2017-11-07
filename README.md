@@ -1,4 +1,4 @@
-# Randomizer for maya
+# Randomizer for Maya
 
 
 
