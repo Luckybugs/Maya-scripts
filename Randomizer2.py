@@ -13,11 +13,12 @@ Rotates and translates user selected polygonal meshes randomly.
 # IMPORT STANDARD MODULES
 import random
 import functools
+from itertools import izip
 
 # IMPORT LOCAL MODULES
 import maya.cmds as cmds
 
-def create_ui(pWindowTitle, pApplyCallback, pRestoreCallback):
+def create_ui(p_window_title, p_apply_callback, p_restore_callback):
     """
         creating UI.
     """
@@ -26,8 +27,7 @@ def create_ui(pWindowTitle, pApplyCallback, pRestoreCallback):
     if cmds.window(window_id, exists=True):
         cmds.deleteUI(window_id)
 
-    cmds.window(window_id, title=pWindowTitle, sizeable=True, 
-                resizeToFitChildren=True)
+    cmds.window(window_id, title=p_window_title, sizeable=True, resizeToFitChildren=True)
 
     cmds.columnLayout(adjustableColumn=True)
 
@@ -37,7 +37,6 @@ def create_ui(pWindowTitle, pApplyCallback, pRestoreCallback):
                          columnOffset=[(1, 'left', 3), (2, 'left', 10),
                                        (3, 'left', 3), (4, 'left', 3),
                                        (5, 'right', 3)])
-    
     # Move controls
     move_input_field = cmds.floatSliderGrp(label='move:', field=True,
                                            fieldMinValue=0, fieldMaxValue=5, 
@@ -50,7 +49,6 @@ def create_ui(pWindowTitle, pApplyCallback, pRestoreCallback):
     mcby = cmds.checkBox(label='Y', value=True)
     mcbz = cmds.checkBox(label='Z', value=True)
     cmds.separator(h=20, style='none')
-   
     # Rotate controls
     rotate_input_field = cmds.floatSliderGrp(label='rotate:', field=True,
                                              fieldMinValue=0, fieldMaxValue=100,
@@ -63,7 +61,6 @@ def create_ui(pWindowTitle, pApplyCallback, pRestoreCallback):
     rcby = cmds.checkBox(label='Y', value=True)
     rcbz = cmds.checkBox(label='Z', value=True)
     cmds.separator(h=20, style='none')
-
     # Scale controls
     scale_input_field = cmds.floatSliderGrp(label='scale:', field=True, 
                                             fieldMinValue=0, fieldMaxValue=1, 
@@ -87,7 +84,7 @@ def create_ui(pWindowTitle, pApplyCallback, pRestoreCallback):
 
     # Buttons 
     cmds.button(label="Randomize", width=240,
-                command=functools.partial(pApplyCallback, move_input_field,
+                command=functools.partial(p_apply_callback, move_input_field,
                                           mcbx, mcby, mcbz,
                                           rotate_input_field,
                                           rcbx, rcby, rcbz,
@@ -96,91 +93,63 @@ def create_ui(pWindowTitle, pApplyCallback, pRestoreCallback):
                                           before_data,))  
     
     cmds.button(label="Restore", width=100,
-                command=functools.partial(pRestoreCallback, before_data))
+                command=functools.partial(p_restore_callback, before_data))
     cmds.separator(h=25, style='none')
     
     cmds.showWindow()
 
-def translater(sel, percent, chek_boxes):
+def translater(sel, percent, chek_boxes, before_data):
     """
         Internal function that changes the transform attributes in the cahnel
         box based on user input.
     """
+    axies = ['X', 'Y', 'Z']
     for item in sel:
-        #constructig the atribute names for each object that is selected
-        my_trans_x = item + '.translateX'
-        my_trans_y = item + '.translateY'
-        my_trans_z = item + '.translateZ'        
+        new_translate_values = []
         
-        #geting what is already in the chanell box
-        old_trans_x = cmds.getAttr(my_trans_x)
-        old_trans_y = cmds.getAttr(my_trans_y)
-        old_trans_z = cmds.getAttr(my_trans_z)
-        
-        #adding or subtracting a random value from original value
-        new_trans_x = old_trans_x + random.uniform(-percent, percent)
-        new_trans_y = old_trans_y + random.uniform(-percent, percent)
-        new_trans_z = old_trans_z + random.uniform(-percent, percent)   
-       
-        #seting the new values to the attributes that the user has marked
-        if chek_boxes[0]:
-            cmds.setAttr(my_trans_x, new_trans_x)
-        if chek_boxes[1]:
-            cmds.setAttr(my_trans_y, new_trans_y)
-        if chek_boxes[2]:
-            cmds.setAttr(my_trans_z, new_trans_z)
+        for old_translate_value in before_data[item]['pos']:
+            new_translate_values.append(old_translate_value + random.uniform(-percent, percent))
+
+         #if the user has cheked the box, we change to the new value
+        for box, new_value, xyz in izip(chek_boxes, new_translate_values, axies):
+            if box: 
+                cmds.setAttr(item + '.translate'+ xyz, new_value)
 
 def rotor(sel, percent, chek_boxes):
     """
-        Internal function that changes the rotate attributes in the cahnel
+        Internal function that changes the rotate attributes in the chnel
         box based on user input.
     """
     degree = (360.0*percent)/100
-
+    axies = ['X', 'Y', 'Z']
     for item in sel:
-        #constructig the atribute names for each object that is selected
-        my_rotate_x = item + '.rotateX'
-        my_rotate_y = item + '.rotateY'
-        my_rotate_z = item + '.rotateZ'
+        new_rotate_values = []
+
+        for xyz in axies:
+            new_rotate_values.append(random.uniform(0, degree))
+        
+        #if the user has cheked the box change to new value
+        for box, new_value, xyz in izip(chek_boxes, new_rotate_values, axies):
+            if box: 
+                cmds.setAttr(item + '.rotate'+ xyz, new_value)
        
-        new_rotate_x = random.uniform(0, degree)
-        new_rotate_y = random.uniform(0, degree)
-        new_rotate_z = random.uniform(0, degree)
-
-        if chek_boxes[0]:
-            cmds.setAttr(my_rotate_x, new_rotate_x)
-        if chek_boxes[1]:
-            cmds.setAttr(my_rotate_y, new_rotate_y)
-        if chek_boxes[2]:
-            cmds.setAttr(my_rotate_z, new_rotate_z)
-
-def scaler(sel, percent, chek_boxes):
+def scaler(sel, percent, chek_boxes, before_data):
     """
         Internal function that changes the scale attributes in the cahnel
         box based on user input.
     """
-    for item in sel:
-        #constructig the atribute names for each object that is selected
-        my_scale_x = item + '.scaleX'
-        my_scale_y = item + '.scaleY'
-        my_scale_z = item + '.scaleZ'
-        
-        #geting what is already in the chanell box
-        old_scale_x = cmds.getAttr(my_scale_x)
-        old_scale_y = cmds.getAttr(my_scale_y)
-        old_scale_z = cmds.getAttr(my_scale_z)
+    axies = ['X', 'Y', 'Z']
+    for item in sel: 
+        new_scale_values = []
 
-        new_scale_x = old_scale_x + random.uniform(-percent, percent)
-        new_scale_y = old_scale_y + random.uniform(-percent, percent)
-        new_scale_z = old_scale_z + random.uniform(-percent, percent)
-        
-        if chek_boxes[0]:
-            cmds.setAttr(my_scale_x, new_scale_x)
-        if chek_boxes[1]:
-            cmds.setAttr(my_scale_y, new_scale_y)
-        if chek_boxes[2]:
-            cmds.setAttr(my_scale_z, new_scale_z)
+        for old_scale_value in before_data[item]['scl']:
+            new_scale_values.append(old_scale_value + random.uniform(-percent, percent))
 
+        #if the user has cheked the box change to new value
+        for box, new_value, xyz in izip(chek_boxes, new_scale_values, axies):
+            if box: 
+                cmds.setAttr(item + '.scale'+ xyz, new_value)
+            
 def find_poly_obj(sel):
     """
         Finds only poly objects in a selection.
@@ -229,35 +198,35 @@ def restore_to_original_position(sel, poly_data):
         else:
             print item +' skiping restore..'
 
-def apply_callback(pMoveInputField, pmcbx, pmcby, pmcbz, pRotateInputField,
-                   prcbx, prcby, prcbz, pScaleInputField, pscbx, pscby, pscbz,
-                   pBeforeData, *pArgs):
+def apply_callback(p_move_input_field, pmcbx, pmcby, pmcbz, p_rotate_input_field,
+                   prcbx, prcby, prcbz, p_scale_input_field, pscbx, pscby, pscbz,
+                   p_before_data, *pArgs):
     """
         applyCallback.
     """  
-    input_translate = cmds.floatSliderGrp(pMoveInputField, query=True, value=True)
+    input_translate = cmds.floatSliderGrp(p_move_input_field, query=True, value=True)
     
-    inputMcbx = cmds.checkBox(pmcbx, query=True, value=True)
-    inputMcby = cmds.checkBox(pmcby, query=True, value=True)
-    inputMcbz = cmds.checkBox(pmcbz, query=True, value=True)
+    input_mcbx = cmds.checkBox(pmcbx, query=True, value=True)
+    input_mcby = cmds.checkBox(pmcby, query=True, value=True)
+    input_mcbz = cmds.checkBox(pmcbz, query=True, value=True)
     
-    input_translate_checkbox = [inputMcbx, inputMcby, inputMcbz]
+    input_translate_checkbox = [input_mcbx, input_mcby, input_mcbz]
 
-    input_rotate = cmds.floatSliderGrp(pRotateInputField, query=True, value=True)
+    input_rotate = cmds.floatSliderGrp(p_rotate_input_field, query=True, value=True)
     
-    inputRcbx = cmds.checkBox(prcbx, query=True, value=True)
-    inputRcby = cmds.checkBox(prcby, query=True, value=True)
-    inputRcbz = cmds.checkBox(prcbz, query=True, value=True)
+    input_rcbx = cmds.checkBox(prcbx, query=True, value=True)
+    input_rcby = cmds.checkBox(prcby, query=True, value=True)
+    input_rcbz = cmds.checkBox(prcbz, query=True, value=True)
     
-    input_rotate_checkbox = [inputRcbx, inputRcby, inputRcbz]
+    input_rotate_checkbox = [input_rcbx, input_rcby, input_rcbz]
    
-    input_scale = cmds.floatSliderGrp(pScaleInputField, query=True, value=True) 
+    input_scale = cmds.floatSliderGrp(p_scale_input_field, query=True, value=True) 
     
-    inputScbx = cmds.checkBox(pscbx, query=True, value=True)
-    inputScby = cmds.checkBox(pscby, query=True, value=True)
-    inputScbz = cmds.checkBox(pscbz, query=True, value=True)
+    input_scbx = cmds.checkBox(pscbx, query=True, value=True)
+    input_scby = cmds.checkBox(pscby, query=True, value=True)
+    input_scbz = cmds.checkBox(pscbz, query=True, value=True)
     
-    input_scale_checkbox = [inputScbx, inputScby, inputScbz]
+    input_scale_checkbox = [input_scbx, input_scby, input_scbz]
 
     selection = cmds.ls(selection=True)
     sel = find_poly_obj(selection)
@@ -267,14 +236,13 @@ def apply_callback(pMoveInputField, pmcbx, pmcby, pmcbz, pRotateInputField,
         cmds.warning('No polygonal objects selected!')
 
     # geting originals before we randomize it
-    get_original_pos(sel, pBeforeData)
+    get_original_pos(sel, p_before_data)
 
-    translater(sel, input_translate, input_translate_checkbox)
+    translater(sel, input_translate, input_translate_checkbox, p_before_data)
     rotor(sel, input_rotate, input_rotate_checkbox)
-    scaler(sel, input_scale, input_scale_checkbox)
+    scaler(sel, input_scale, input_scale_checkbox, p_before_data)
 
-
-def restore_callback(pBeforeData, *pArgs):
+def restore_callback(p_before_data, *pArgs):
     """
         restoreCallback
     """
@@ -285,6 +253,6 @@ def restore_callback(pBeforeData, *pArgs):
     sel = find_poly_obj(selection)
 
     # restoring those we have moved
-    restore_to_original_position(sel, pBeforeData)
+    restore_to_original_position(sel, p_before_data)
 
 create_ui('Rand All The Things!!! 1.0', apply_callback, restore_callback)
