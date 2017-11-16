@@ -158,9 +158,11 @@ def find_poly_obj(sel):
   
     for item in sel:
         shapes = cmds.listRelatives(item, shapes=True)
+        
     
-        if cmds.nodeType(shapes[0]) == 'mesh':
+        if cmds.nodeType(shapes[0]) == 'mesh' or cmds.nodeType(shapes[0]) == 'reference':
             poly_obj.append(item)
+
 
     return poly_obj
 
@@ -228,8 +230,8 @@ def apply_callback(p_move_input_field, pmcbx, pmcby, pmcbz, p_rotate_input_field
     
     input_scale_checkbox = [input_scbx, input_scby, input_scbz]
 
-    sel = cmds.ls(selection=True)
-    #sel = find_poly_obj(selection)
+    selection = cmds.ls(selection=True)
+    sel = find_poly_obj(selection)
 
     #chek to see if anything is selected
     if not sel:
@@ -247,10 +249,10 @@ def restore_callback(p_before_data, *pArgs):
         restoreCallback
     """
     # get the selection
-    sel = cmds.ls(selection=True)
+    selection = cmds.ls(selection=True)
 
-    # filter to just poly objects
-    #sel = find_poly_obj(selection)
+    #filter to just poly objects
+    sel = find_poly_obj(selection)
 
     # restoring those we have moved
     restore_to_original_position(sel, p_before_data)
