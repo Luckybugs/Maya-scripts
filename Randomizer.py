@@ -16,6 +16,106 @@ from itertools import izip
 # IMPORT LOCAL MODULES
 import maya.cmds as cmds
 
+def find_poly_obj(sel):
+    """
+        Finds only poly objects in a selection.
+    """
+    poly_obj = []
+
+    for item in sel:
+        shapes = cmds.listRelatives(item, shapes=True)
+
+        if cmds.nodeType(shapes[0]) == 'mesh':
+            poly_obj.append(item)
+
+    return poly_obj
+
+def get_original_pos(polys, before_data):
+    """
+        Gets original attributes of objects.
+    """
+    for item in polys:
+        if item not in before_data:
+            pos = cmds.getAttr(item +'.translate')[0]
+            rot = cmds.getAttr(item +'.rotate')[0]
+            scl = cmds.getAttr(item +'.scale')[0]
+
+            current_dict = {
+                'pos': pos,
+                'rot': rot,
+                'scl': scl
+                }
+            before_data[item] = current_dict
+
+    return before_data
+
+def translater(sel, percent, chek_boxes, before_data):
+    """
+        Internal function that changes the transform attributes in the
+        channel box based on user input.
+    """
+    axies = ['X', 'Y', 'Z']
+    for item in sel:
+        new_translate_values = []
+
+        for old_translate_value in before_data[item]['pos']:
+            new_translate_values.append(old_translate_value + random.uniform(-percent, percent))
+
+         #if the user has cheked the box, we change to the new value
+        for box, new_value, xyz in izip(chek_boxes, new_translate_values, axies):
+            if box:
+                cmds.setAttr(item + '.translate'+ xyz, new_value)
+
+def rotor(sel, percent, chek_boxes):
+    """
+        Internal function that changes the rotate attributes in the
+        channel box based on user input.
+    """
+    degree = (360.0*percent)/100
+    axies = ['X', 'Y', 'Z']
+    for item in sel:
+        new_rotate_values = []
+
+        for xyz in axies:
+            new_rotate_values.append(random.uniform(0, degree))
+
+        #if the user has cheked the box change to new value
+        for box, new_value, xyz in izip(chek_boxes, new_rotate_values, axies):
+            if box:
+                cmds.setAttr(item + '.rotate'+ xyz, new_value)
+
+def scaler(sel, percent, chek_boxes, before_data):
+    """
+        Internal function that changes the scale attributes in the
+        channel box on user input.
+    """
+    axies = ['X', 'Y', 'Z']
+    for item in sel:
+        new_scale_values = []
+
+        for old_scale_value in before_data[item]['scl']:
+            new_scale_values.append(old_scale_value + random.uniform(-percent, percent))
+
+        #if the user has cheked the box change to new value
+        for box, new_value, xyz in izip(chek_boxes, new_scale_values, axies):
+            if box:
+                cmds.setAttr(item + '.scale'+ xyz, new_value)
+
+def restore_to_original_position(sel, poly_data):
+    """
+        restores to orginal channel box values.
+    """
+    for item in sel:
+        if item in poly_data:
+            pos = poly_data[item]['pos']
+            cmds.setAttr(item + '.translate', pos[0], pos[1], pos[2])
+            rot = poly_data[item]['rot']
+            cmds.setAttr(item + '.rotate', rot[0], rot[1], rot[2])
+            scl = poly_data[item]['scl']
+            cmds.setAttr(item + '.scale', scl[0], scl[1], scl[2])
+        else:
+            print item +' skiping restore..'
+
 def create_ui(p_window_title, p_apply_callback, p_restore_callback):
     """
         creating UI.
@@ -96,106 +196,6 @@ def create_ui(p_window_title, p_apply_callback, p_restore_callback):
 
     cmds.showWindow()
 
-def translater(sel, percent, chek_boxes, before_data):
-    """
-        Internal function that changes the transform attributes in the
-        channel box based on user input.
-    """
-    axies = ['X', 'Y', 'Z']
-    for item in sel:
-        new_translate_values = []
-
-        for old_translate_value in before_data[item]['pos']:
-            new_translate_values.append(old_translate_value + random.uniform(-percent, percent))
-
-         #if the user has cheked the box, we change to the new value
-        for box, new_value, xyz in izip(chek_boxes, new_translate_values, axies):
-            if box:
-                cmds.setAttr(item + '.translate'+ xyz, new_value)
-
-def rotor(sel, percent, chek_boxes):
-    """
-        Internal function that changes the rotate attributes in the
-        channel box based on user input.
-    """
-    degree = (360.0*percent)/100
-    axies = ['X', 'Y', 'Z']
-    for item in sel:
-        new_rotate_values = []
-
-        for xyz in axies:
-            new_rotate_values.append(random.uniform(0, degree))
-
-        #if the user has cheked the box change to new value
-        for box, new_value, xyz in izip(chek_boxes, new_rotate_values, axies):
-            if box:
-                cmds.setAttr(item + '.rotate'+ xyz, new_value)
-
-def scaler(sel, percent, chek_boxes, before_data):
-    """
-        Internal function that changes the scale attributes in the
-        channel box on user input.
-    """
-    axies = ['X', 'Y', 'Z']
-    for item in sel:
-        new_scale_values = []
-
-        for old_scale_value in before_data[item]['scl']:
-            new_scale_values.append(old_scale_value + random.uniform(-percent, percent))
-
-        #if the user has cheked the box change to new value
-        for box, new_value, xyz in izip(chek_boxes, new_scale_values, axies):
-            if box:
-                cmds.setAttr(item + '.scale'+ xyz, new_value)
-
-def find_poly_obj(sel):
-    """
-        Finds only poly objects in a selection.
-    """
-    poly_obj = []
-
-    for item in sel:
-        shapes = cmds.listRelatives(item, shapes=True)
-
-        if cmds.nodeType(shapes[0]) == 'mesh':
-            poly_obj.append(item)
-
-    return poly_obj
-
-def get_original_pos(polys, before_data):
-    """
-        Gets original attributes of objects.
-    """
-    for item in polys:
-        if item not in before_data:
-            pos = cmds.getAttr(item +'.translate')[0]
-            rot = cmds.getAttr(item +'.rotate')[0]
-            scl = cmds.getAttr(item +'.scale')[0]
-
-            current_dict = {
-                'pos': pos,
-                'rot': rot,
-                'scl': scl
-                }
-            before_data[item] = current_dict
-
-    return before_data
-
-def restore_to_original_position(sel, poly_data):
-    """
-        restores to orginal channel box values.
-    """
-    for item in sel:
-        if item in poly_data:
-            pos = poly_data[item]['pos']
-            cmds.setAttr(item + '.translate', pos[0], pos[1], pos[2])
-            rot = poly_data[item]['rot']
-            cmds.setAttr(item + '.rotate', rot[0], rot[1], rot[2])
-            scl = poly_data[item]['scl']
-            cmds.setAttr(item + '.scale', scl[0], scl[1], scl[2])
-        else:
-            print item +' skiping restore..'
-
 def apply_callback(p_move_input_field, pmcbx, pmcby, pmcbz, p_rotate_input_field,
                    prcbx, prcby, prcbz, p_scale_input_field, pscbx, pscby, pscbz,
                    p_before_data, *pArgs):
@@ -244,7 +244,7 @@ def apply_callback(p_move_input_field, pmcbx, pmcby, pmcbz, p_rotate_input_field
 
 def restore_callback(p_before_data, *pArgs):
     """
-        restoreCallback
+        restore callback
     """
     # get users selection
     selection = cmds.ls(selection=True)
