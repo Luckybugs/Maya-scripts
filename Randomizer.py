@@ -13,7 +13,7 @@ import random
 import functools
 from itertools import izip
 
-# IMPORT LOCAL MODULES
+# IMPORT 3RD PARTY MODULES
 import maya.cmds as cmds
 
 def find_poly_obj(sel):
